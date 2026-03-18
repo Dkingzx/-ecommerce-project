@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GreenVa — Organic Food Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- NAV -->
+<nav>
+  <div class="logo"><span>🌿</span> Greenva Stores</div>
+  <div class="nav-links">
+    <button class="active" onclick="showPage('shop')">Shop</button>
+    <button onclick="showPage('about')">About</button>
+    <button onclick="showPage('order')">Order</button>
+    <button onclick="showPage('history')">📋 History</button>
+    <button class="cart-btn" onclick="showPage('cart')">
+      🛒 Cart <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+ 
+<!-- SHOP PAGE -->
+<div class="page active" id="page-shop">
+  <div class="hero">
+    <div class="hero-text">
+      <h1>Fresh, <em>Organic</em><br>Delivered to You</h1>
+      <p>Browse certified organic produce, dairy, and pantry staples. Supporting local farmers and your health — one order at a time.</p>
+      <button class="hero-cta" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now →</button>
+      <div class="hero-badges">
+        <span class="badge">✅ 100% Certified Organic</span>
+        <span class="badge">🚚 Free Delivery ₹500+</span>
+        <span class="badge">🌱 Farm to Table</span>
+      </div>
+    </div>
+    <div class="hero-image">🥦</div>
+  </div>
+ 
+  <section id="products">
+    <h2 class="section-title">Our Products</h2>
+    <p class="section-sub">Freshly sourced, sustainably grown</p>
+    <div class="search-bar-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search products... e.g. Mango, Milk, Honey" oninput="handleSearch()" />
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+    <div class="categories" id="categoryBar"></div>
+    <div id="searchResultInfo" class="search-result-info"></div>
+    <div class="product-grid" id="productGrid"></div>
+  </section>
+</div>
+ 
+<!-- CART PAGE -->
+<div class="page" id="page-cart">
+  <section>
+    <h2 class="section-title">Your Cart</h2>
+    <p class="section-sub">Review your items before checkout</p>
+    <div class="cart-container">
+      <div id="cartItems"></div>
+      <div id="cartSummary"></div>
+    </div>
+  </section>
+</div>
+ 
+<!-- ORDER PAGE -->
+<div class="page" id="page-order">
+  <section>
+    <h2 class="section-title">Place Your Order</h2>
+    <p class="section-sub">Fill in your details for delivery</p>
+    <div class="order-form" id="orderFormContainer">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fname" placeholder="XXXXXXXXX" />
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="fphone" placeholder="+91 9XXXXXXXXX" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="femail" placeholder="you@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Delivery Address</label>
+        <textarea id="faddress" rows="3" placeholder="House No, Street, City, State, PIN"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Delivery Date</label>
+          <input type="date" id="fdate" />
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <div class="payment-methods">
+            <label class="pay-option" onclick="selectPayment('cod')">
+              <input type="radio" name="paymethod" value="cod" id="pay-cod" />
+              <span class="pay-icon">💵</span>
+              <span class="pay-label">Cash on Delivery</span>
+            </label>
+            <label class="pay-option" onclick="selectPayment('upi')">
+              <input type="radio" name="paymethod" value="upi" id="pay-upi" />
+              <span class="pay-icon">📱</span>
+              <span class="pay-label">UPI / GPay</span>
+            </label>
+            <label class="pay-option" onclick="selectPayment('card')">
+              <input type="radio" name="paymethod" value="card" id="pay-card" />
+              <span class="pay-icon">💳</span>
+              <span class="pay-label">Card</span>
+            </label>
+            <label class="pay-option" onclick="selectPayment('netbanking')">
+              <input type="radio" name="paymethod" value="netbanking" id="pay-netbanking" />
+              <span class="pay-icon">🏦</span>
+              <span class="pay-label">Net Banking</span>
+            </label>
+          </div>
+          <!-- UPI sub-form -->
+          <div class="pay-subform" id="subform-upi" style="display:none">
+            <input type="text" id="upiId" placeholder="yourname@upi (e.g. 9876543210@gpay)" />
+          </div>
+          <!-- Card sub-form -->
+          <div class="pay-subform" id="subform-card" style="display:none">
+            <input type="text" id="cardNumber" placeholder="Card Number (16 digits)" maxlength="19" oninput="formatCard(this)" />
+            <div class="form-row" style="margin-top:10px">
+              <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" />
+              <input type="text" id="cardCvv" placeholder="CVV" maxlength="3" />
+            </div>
+            <input type="text" style="margin-top:10px" id="cardName" placeholder="Name on Card" />
+          </div>
+          <!-- Net Banking sub-form -->
+          <div class="pay-subform" id="subform-netbanking" style="display:none">
+            <select id="bankSelect">
+              <option value="">Select your bank</option>
+              <option>State Bank of India</option>
+              <option>HDFC Bank</option>
+              <option>ICICI Bank</option>
+              <option>Axis Bank</option>
+              <option>Kotak Mahindra Bank</option>
+              <option>Bank of Baroda</option>
+              <option>Punjab National Bank</option>
+              <option>Canara Bank</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Special Instructions (optional)</label>
+        <textarea id="fnotes" rows="2" placeholder="e.g. Leave at door, call before delivery..."></textarea>
+      </div>
+      <button class="submit-btn" onclick="placeOrder()">✅ Confirm Order</button>
+    </div>
+    <div class="success-box" id="successBox" style="display:none">
+      <div class="s-icon">🎉</div>
+      <h2>Order Placed!</h2>
+      <p>Thank you for your order. Your fresh organic produce will be delivered as scheduled. You'll receive a confirmation shortly.</p>
+      <button class="checkout-btn" onclick="showPage('shop')">Continue Shopping →</button>
+    </div>
+  </section>
+</div>
+ 
+<!-- ABOUT PAGE -->
+<div class="page" id="page-about">
+  <section>
+    <h2 class="section-title">Why GreenRoots?</h2>
+    <p class="section-sub">Our commitment to health, sustainability, and community</p>
+    <div class="about-grid">
+      <div class="about-card"><div class="icon">🌾</div><h3>Farm Direct</h3><p>We source directly from certified organic farms, cutting out the middleman to bring you fresher produce at better prices.</p></div>
+      <div class="about-card"><div class="icon">🧪</div><h3>Certified Organic</h3><p>All our products are certified organic — no pesticides, no GMOs, no artificial additives. Just pure, natural goodness.</p></div>
+      <div class="about-card"><div class="icon">🚚</div><h3>Fast Delivery</h3><p>Scheduled same-day or next-day delivery options so your produce arrives fresh, right at your doorstep.</p></div>
+      <div class="about-card"><div class="icon">🤝</div><h3>Farmer Support</h3><p>We work with local organic farmers, ensuring fair pricing and a sustainable livelihood for farming communities.</p></div>
+      <div class="about-card"><div class="icon">🔒</div><h3>Secure Payments</h3><p>Multiple secure payment options including UPI, net banking, and cash on delivery for your convenience.</p></div>
+      <div class="about-card"><div class="icon">♻️</div><h3>Eco Packaging</h3><p>All deliveries come in 100% biodegradable and recyclable packaging — good for you and the planet.</p></div>
+    </div>
+    <div style="margin-top:48px; background: linear-gradient(135deg,#1b4332,#2d6a4f); border-radius: 20px; padding: 36px; color: #d8f3dc;">
+      <h3 style="font-family:'Playfair Display',serif; font-size:1.5rem; margin-bottom:12px;">📄 Project Abstract</h3>
+      <p style="line-height:1.8; font-size:0.95rem; opacity:0.9;">This portal implements an Online Organic Food Ordering System using Python (backend logic), HTML, CSS, and JavaScript. The system allows users to browse organic food items, view product details, place orders, and manage payments. It maintains information about products, customers, orders, and delivery details — promoting healthy eating habits and supporting organic farmers.</p>
+      <p style="margin-top:12px; font-size:0.85rem; opacity:0.7;">— Dhapanan G · Register No: 23BCA215</p>
+    </div>
+  </section>
+</div>
+ 
+<!-- ORDER HISTORY PAGE -->
+<div class="page" id="page-history">
+  <section>
+    <h2 class="section-title">Order History</h2>
+    <p class="section-sub">Your past orders at a glance</p>
+    <div class="cart-container" id="historyContainer">
+      <div class="cart-empty">
+        <div class="empty-icon">📋</div>
+        <h3>No orders yet</h3>
+        <p>Your placed orders will appear here.</p>
+        <br>
+        <button class="checkout-btn" onclick="showPage('shop')" style="max-width:200px">Start Shopping →</button>
+      </div>
+    </div>
+  </section>
+</div>
+ 
+<div id="toast">🌿 <span id="toastMsg"></span></div>
+ 
+<footer>
+  <strong>Greenva</strong> — Online Organic Food Ordering Portal &nbsp;|&nbsp; 
+  Dhapanan G · 23BCA215 &nbsp;|&nbsp; Built with , HTML &amp; CSS
+</footer>
+ 
+<script>
+const products = [
+  { id:1,  name:"Organic Spinach",    img:"https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=80", price:45,  category:"Vegetables", desc:"Fresh baby spinach, pesticide-free",         rating:"⭐ 4.8" },
+  { id:2,  name:"Heirloom Tomatoes",  img:"https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400&q=80", price:60,  category:"Vegetables", desc:"Vine-ripened, naturally sweet",              rating:"⭐ 4.7" },
+  { id:3,  name:"Broccoli Crown",     img:"https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80", price:80,  category:"Vegetables", desc:"Crisp, nutrient-dense florets",             rating:"⭐ 4.9" },
+  { id:4,  name:"Sweet Carrots",      img:"https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&q=80", price:35,  category:"Vegetables", desc:"Freshly harvested, earthy sweet",           rating:"⭐ 4.6" },
+  { id:5,  name:"Organic Apples",     img:"https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&q=80", price:120, category:"Fruits",     desc:"Crisp Kashmiri apples, no wax",            rating:"⭐ 4.9" },
+  { id:6,  name:"Bananas",            img:"https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&q=80", price:50,  category:"Fruits",     desc:"Naturally ripened, energy-rich",           rating:"⭐ 4.7" },
+  { id:7,  name:"Mangoes",            img:"https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&q=80", price:180, category:"Fruits",     desc:"Alphonso variety, certified organic",      rating:"⭐ 5.0" },
+  { id:8,  name:"Oranges",            img:"https://images.unsplash.com/photo-1547514701-42782101795e?w=400&q=80", price:90,  category:"Fruits",     desc:"Juicy, vitamin C-rich Nagpur oranges",    rating:"⭐ 4.8" },
+  { id:9,  name:"Organic Milk",       img:"https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80", price:70,  category:"Dairy",      desc:"A2 milk, grass-fed cows, fresh daily",    rating:"⭐ 4.9" },
+  { id:10, name:"Farm Butter",        img:"https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&q=80", price:140, category:"Dairy",      desc:"Cultured, slow-churned organic butter",   rating:"⭐ 4.8" },
+  { id:11, name:"Paneer",             img:"https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80", price:110, category:"Dairy",      desc:"Fresh, soft, high-protein organic paneer",rating:"⭐ 4.7" },
+  { id:12, name:"Whole Wheat Flour",  img:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80", price:65,  category:"Pantry",     desc:"Stone-ground whole grain atta",            rating:"⭐ 4.6" },
+  { id:13, name:"Raw Honey",          img:"https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400&q=80", price:200, category:"Pantry",     desc:"Unfiltered wildflower honey",              rating:"⭐ 5.0" },
+  { id:14, name:"Turmeric Powder",    img:"https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80", price:85,  category:"Pantry",     desc:"Pure Lakadong turmeric, high curcumin",   rating:"⭐ 4.9" },
+  { id:15, name:"Sprouted Grain Bowl",img:"https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80", price:170, category:"Ready-to-eat", desc:"Mixed sprouts, veggies & tahini drizzle", rating:"⭐ 4.8" },
+  { id:16, name:"Avocado Toast Kit",  img:"https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&q=80", price:220, category:"Ready-to-eat", desc:"Whole grain bread, organic avo & toppings",rating:"⭐ 4.9" },
+];
+ 
+let cart = {};
+let activeCategory = "All";
+let searchQuery = "";
+let orderHistory = [];
+let selectedPayment = "";
+ 
+const categories = ["All", ...new Set(products.map(p => p.category))];
+ 
+// ── SEARCH ──────────────────────────────────────────────
+function handleSearch() {
+  searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+  document.getElementById('searchClear').style.display = searchQuery ? 'flex' : 'none';
+  activeCategory = "All";
+  renderCategories();
+  renderProducts();
+}
+ 
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchQuery = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResultInfo').innerHTML = '';
+  renderProducts();
+}
+ 
+// ── CATEGORIES ──────────────────────────────────────────
+function renderCategories() {
+  const bar = document.getElementById('categoryBar');
+  bar.innerHTML = categories.map(c =>
+    `<button class="cat-btn ${c===activeCategory?'active':''}" onclick="filterCategory('${c}')">${c}</button>`
+  ).join('');
+}
+ 
+function filterCategory(cat) {
+  activeCategory = cat;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  renderCategories();
+  renderProducts();
+}
+ 
+// ── PRODUCTS ─────────────────────────────────────────────
+function renderProducts() {
+  const grid = document.getElementById('productGrid');
+  const info = document.getElementById('searchResultInfo');
+  let filtered = activeCategory === "All" ? products : products.filter(p => p.category === activeCategory);
+  if (searchQuery) {
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(searchQuery) ||
+      p.desc.toLowerCase().includes(searchQuery) ||
+      p.category.toLowerCase().includes(searchQuery)
+    );
+    info.innerHTML = filtered.length
+      ? `<p style="color:var(--muted);font-size:0.88rem;margin-bottom:16px;">Showing <strong>${filtered.length}</strong> result${filtered.length>1?'s':''} for "<strong>${document.getElementById('searchInput').value}</strong>"</p>`
+      : `<p style="color:var(--earth);font-size:0.88rem;margin-bottom:16px;">No products found for "<strong>${document.getElementById('searchInput').value}</strong>" 😔</p>`;
+  } else {
+    info.innerHTML = '';
+  }
+ 
+  grid.innerHTML = filtered.length === 0 ? `
+    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)">
+      <div style="font-size:3.5rem;margin-bottom:12px">🥦</div>
+      <h3>No products found</h3>
+      <p style="margin-top:6px">Try a different search term</p>
+    </div>` :
+  filtered.map(p => `
+    <div class="product-card">
+      <div class="product-img">
+        <span class="organic-tag">Organic</span>
+        <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:0;" onerror="this.style.display='none'" />
+      </div>
+      <div class="product-body">
+        <div class="rating">${p.rating}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">₹${p.price}</div>
+          <button class="add-btn" onclick="addToCart(${p.id})" title="Add to cart">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+ 
+// ── CART ─────────────────────────────────────────────────
+function addToCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  updateCartCount();
+  const p = products.find(x => x.id === id);
+  showToast(`${p.name} added to cart 🛒`);
+}
+ 
+function updateCartCount() {
+  const total = Object.values(cart).reduce((a,b) => a+b, 0);
+  document.getElementById('cartCount').textContent = total;
+}
+ 
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const summaryDiv = document.getElementById('cartSummary');
+  const keys = Object.keys(cart).filter(k => cart[k] > 0);
+ 
+  if (!keys.length) {
+    container.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><h3>Your cart is empty</h3><p>Add some fresh organic produce!</p><br><button class="checkout-btn" onclick="showPage('shop')" style="max-width:200px">Browse Shop →</button></div>`;
+    summaryDiv.innerHTML = '';
+    return;
+  }
+ 
+  container.innerHTML = keys.map(k => {
+    const p = products.find(x => x.id == k);
+    return `<div class="cart-item">
+      <div class="cart-item-emoji"><img src="${p.img}" alt="${p.name}" style="width:52px;height:52px;object-fit:cover;border-radius:10px;" /></div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${p.name}</div>
+        <div class="cart-item-price">₹${p.price} each · ₹${p.price * cart[k]} total</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+        <span class="qty-num">${cart[k]}</span>
+        <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
+      </div>
+      <button class="remove-btn" onclick="removeItem(${p.id})" title="Remove">🗑</button>
+    </div>`;
+  }).join('');
+ 
+  const subtotal = keys.reduce((sum, k) => {
+    const p = products.find(x => x.id == k);
+    return sum + p.price * cart[k];
+  }, 0);
+  const delivery = subtotal >= 500 ? 0 : 40;
+  const total = subtotal + delivery;
+ 
+  summaryDiv.innerHTML = `<div class="cart-summary">
+    <div class="summary-row"><span>Subtotal</span><span>₹${subtotal}</span></div>
+    <div class="summary-row"><span>Delivery</span><span>${delivery === 0 ? '<span style="color:var(--green)">FREE</span>' : '₹'+delivery}</span></div>
+    <div class="summary-row total"><span>Total</span><span>₹${total}</span></div>
+    <button class="checkout-btn" onclick="showPage('order')">Proceed to Checkout →</button>
+  </div>`;
+}
+ 
+function changeQty(id, delta) {
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  updateCartCount();
+  renderCart();
+}
+ 
+function removeItem(id) {
+  delete cart[id];
+  updateCartCount();
+  renderCart();
+}
+ 
+// ── PAYMENT ──────────────────────────────────────────────
+function selectPayment(method) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.pay-subform').forEach(el => el.style.display = 'none');
+  const radio = document.getElementById('pay-' + method);
+  if (radio) { radio.checked = true; radio.closest('.pay-option').classList.add('selected'); }
+  const sub = document.getElementById('subform-' + method);
+  if (sub) sub.style.display = 'block';
+}
+ 
+function formatCard(el) {
+  let v = el.value.replace(/\D/g,'').substring(0,16);
+  el.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+ 
+function formatExpiry(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length >= 3) v = v.substring(0,2) + ' / ' + v.substring(2,4);
+  el.value = v;
+}
+ 
+// ── ORDER ─────────────────────────────────────────────────
+function placeOrder() {
+  const name    = document.getElementById('fname').value.trim();
+  const phone   = document.getElementById('fphone').value.trim();
+  const email   = document.getElementById('femail').value.trim();
+  const address = document.getElementById('faddress').value.trim();
+  const date    = document.getElementById('fdate').value;
+ 
+  if (!name || !phone || !address || !date) {
+    showToast('⚠️ Please fill all required fields'); return;
+  }
+  if (!selectedPayment) {
+    showToast('⚠️ Please select a payment method'); return;
+  }
+ 
+  // Gather ordered items
+  const keys = Object.keys(cart).filter(k => cart[k] > 0);
+  if (!keys.length) { showToast('⚠️ Your cart is empty'); return; }
+ 
+  const items = keys.map(k => {
+    const p = products.find(x => x.id == k);
+    return { name: p.name, qty: cart[k], price: p.price, img: p.img };
+  });
+  const subtotal = items.reduce((s,i) => s + i.price * i.qty, 0);
+  const delivery = subtotal >= 500 ? 0 : 40;
+  const total    = subtotal + delivery;
+ 
+  const payLabels = { cod:'Cash on Delivery', upi:'UPI / GPay', card:'Card', netbanking:'Net Banking' };
+ 
+  orderHistory.unshift({
+    id: 'ORD' + Date.now(),
+    date: new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    deliveryDate: date,
+    name, phone, email, address,
+    payment: payLabels[selectedPayment] || selectedPayment,
+    items, subtotal, delivery, total,
+    status: 'Confirmed ✅'
+  });
+ 
+  document.getElementById('orderFormContainer').style.display = 'none';
+  document.getElementById('successBox').style.display = 'block';
+  cart = {};
+  selectedPayment = '';
+  updateCartCount();
+}
+ 
+// ── ORDER HISTORY ─────────────────────────────────────────
+function renderHistory() {
+  const container = document.getElementById('historyContainer');
+  if (!orderHistory.length) {
+    container.innerHTML = `<div class="cart-empty">
+      <div class="empty-icon">📋</div>
+      <h3>No orders yet</h3>
+      <p>Your placed orders will appear here.</p><br>
+      <button class="checkout-btn" onclick="showPage('shop')" style="max-width:200px">Start Shopping →</button>
+    </div>`;
+    return;
+  }
+  container.innerHTML = orderHistory.map(o => `
+    <div class="history-card">
+      <div class="history-header">
+        <div>
+          <div class="history-id">${o.id}</div>
+          <div class="history-meta">Ordered on ${o.date} &nbsp;·&nbsp; Delivery: ${o.deliveryDate}</div>
+        </div>
+        <span class="history-status">${o.status}</span>
+      </div>
+      <div class="history-items">
+        ${o.items.map(i => `
+          <div class="history-item">
+            <img src="${i.img}" alt="${i.name}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" />
+            <span class="history-item-name">${i.name}</span>
+            <span class="history-item-qty">× ${i.qty}</span>
+            <span class="history-item-price">₹${i.price * i.qty}</span>
+          </div>`).join('')}
+      </div>
+      <div class="history-footer">
+        <span>💳 ${o.payment}</span>
+        <span class="history-total">Total: ₹${o.total}</span>
+      </div>
+    </div>
+  `).join('');
+}
+ 
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = '🌿 <span>' + msg + '</span>';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+ 
+// ── NAVIGATION ────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+  const map = { shop:0, about:1, order:2, history:3, cart:4 };
+  document.querySelectorAll('.nav-links button')[map[name]]?.classList.add('active');
+  if (name === 'cart') renderCart();
+  if (name === 'history') renderHistory();
+  if (name === 'order') {
+    document.getElementById('orderFormContainer').style.display = 'block';
+    document.getElementById('successBox').style.display = 'none';
+    selectedPayment = '';
+    document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.pay-subform').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('input[name=paymethod]').forEach(r => r.checked = false);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+ 
+// Init
+renderCategories();
+renderProducts();
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('fdate').min = today;
+</script>
+</body>
+</html>
+ 
